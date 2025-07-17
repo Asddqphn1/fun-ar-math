@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geoarappv1/src/apparview.dart';
+import 'package:flutter/services.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   runApp(const WidgetDasar());
 }
 

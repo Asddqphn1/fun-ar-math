@@ -37,6 +37,7 @@ dependencies:
   model_viewer_plus: ^1.9.3
   shared_preferences: ^2.5.3
   carousel_slider: ^5.1.1
+  quickalert: ^1.1.0
 
 dev_dependencies:
   flutter_test:
