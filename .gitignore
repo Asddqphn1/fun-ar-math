@@ -56,6 +56,9 @@ local.properties
 *.freezed.dart
 *.chopper.dart
 
+# Ignore Firebase options file
+lib/firebase_options.dart
+
 # iOS/macOS
 **/ios/Pods/
 **/ios/Podfile.lock
