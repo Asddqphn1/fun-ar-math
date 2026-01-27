@@ -38,6 +38,12 @@ dependencies:
   shared_preferences: ^2.5.3
   carousel_slider: ^5.1.1
   quickalert: ^1.1.0
+  cloud_firestore: ^6.1.0
+  firebase_core: ^4.2.1
+  font_awesome_flutter: ^10.9.1
+  http: ^1.6.0
+  google_sign_in: ^6.2.1
+  provider: ^6.0.3
 
 dev_dependencies:
   flutter_test:
