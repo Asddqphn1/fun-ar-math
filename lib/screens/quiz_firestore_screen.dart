@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:quickalert/quickalert.dart';
 import '../models/question_model.dart';
 import '../services/firebase_service.dart';
+import '../core/language_provider.dart';
+import '../core/app_strings.dart';
+import '../core/translation_service.dart';
 
 class QuizFirestoreScreen extends StatefulWidget {
   final String collectionId;
@@ -30,50 +34,59 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title, style: const TextStyle(color: Colors.white)),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)]),
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseService.getQuestions(widget.categoryDoc, widget.collectionId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+    return Consumer<LanguageProvider>(
+      builder: (context, langProvider, _) {
+        final lang = langProvider.languageCode;
 
-          final docs = snapshot.data!.docs;
-          if (docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.folder_off, size: 60, color: Colors.grey),
-                  const SizedBox(height: 10),
-                  Text("Soal ${widget.collectionId} belum tersedia di server.", style: const TextStyle(color: Colors.grey)),
-                ],
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title, style: const TextStyle(color: Colors.white)),
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)]),
               ),
-            );
-          }
+            ),
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseService.getQuestions(widget.categoryDoc, widget.collectionId),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+              if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-          final questions = docs.map((doc) {
-            return QuestionModel.fromFirestore(doc.data() as Map<String, dynamic>);
-          }).toList();
+              final docs = snapshot.data!.docs;
+              if (docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.folder_off, size: 60, color: Colors.grey),
+                      const SizedBox(height: 10),
+                      Text(
+                        "${widget.collectionId} ${AppStrings.get('questions_not_available', lang)}",
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-          return _buildQuizContent(questions);
-        },
-      ),
+              final questions = docs.map((doc) {
+                return QuestionModel.fromFirestore(doc.data() as Map<String, dynamic>);
+              }).toList();
+
+              return _buildQuizContent(questions, lang);
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildQuizContent(List<QuestionModel> questions) {
+  Widget _buildQuizContent(List<QuestionModel> questions, String lang) {
     // --- JIKA KUIS SELESAI, TAMPILKAN HASIL SKOR ---
     if (_currentIndex >= questions.length) {
-      return _buildResultScreen(questions.length);
+      return _buildResultScreen(questions.length, lang);
     }
 
     final question = questions[_currentIndex];
@@ -90,8 +103,10 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
           ),
           const SizedBox(height: 10),
-          Text("Soal ${_currentIndex + 1} / ${questions.length}", textAlign: TextAlign.center),
+          Text("${AppStrings.get('question_of', lang)} ${_currentIndex + 1} / ${questions.length}", textAlign: TextAlign.center),
           const SizedBox(height: 20),
+          
+          // Translated Question
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -100,9 +115,17 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
               border: Border.all(color: Colors.blue.shade100),
               boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 5)],
             ),
-            child: Text(question.question, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            child: FutureBuilder<String>(
+              future: TranslationService.translate(question.question, lang),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                return Text(snapshot.data!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center);
+              }
+            ),
           ),
           const SizedBox(height: 20),
+          
+          // Translated Options
           ...List.generate(question.options.length, (index) {
             final isSelected = _selectedOptionIndex == index;
             return GestureDetector(
@@ -119,7 +142,15 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
                   children: [
                     Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked, color: Colors.blue),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(question.options[index])),
+                    Expanded(
+                      child: FutureBuilder<String>(
+                        future: TranslationService.translate(question.options[index], lang),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) return const Text('...');
+                          return Text(snapshot.data!);
+                        }
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -128,7 +159,7 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
           const SizedBox(height: 20),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-            onPressed: _selectedOptionIndex == null ? null : () {
+            onPressed: _selectedOptionIndex == null ? null : () async {
               bool isCorrect = _selectedOptionIndex == question.correctAnswerIndex;
 
               // --- LOGIKA HITUNG SKOR ---
@@ -138,12 +169,24 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
                 _wrongAnswers++;
               }
 
+              // Translate the correct answer explanation if wrong
+              String correctAnsText = question.options[question.correctAnswerIndex];
+              if (!isCorrect && lang != 'id') {
+                correctAnsText = await TranslationService.translate(correctAnsText, lang);
+              }
+
+              if (!mounted) return;
+
               QuickAlert.show(
                   context: context,
                   type: isCorrect ? QuickAlertType.success : QuickAlertType.error,
-                  title: isCorrect ? 'Benar!' : 'Salah',
-                  text: isCorrect ? 'Lanjut ke soal berikutnya?' : 'Jawaban yang benar: \n${question.options[question.correctAnswerIndex]}',
-                  confirmBtnText: 'Lanjut',
+                  title: isCorrect
+                      ? '${AppStrings.get('correct', lang)}!'
+                      : AppStrings.get('incorrect', lang),
+                  text: isCorrect
+                      ? AppStrings.get('next_question', lang)
+                      : '${AppStrings.get('correct_answer_is', lang)}: \n$correctAnsText',
+                  confirmBtnText: AppStrings.get('next', lang),
                   onConfirmBtnTap: () {
                     Navigator.pop(context); // Tutup Alert
                     setState(() {
@@ -153,7 +196,7 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
                   }
               );
             },
-            child: const Text("Jawab"),
+            child: Text(AppStrings.get('answer_btn', lang)),
           )
         ],
       ),
@@ -161,9 +204,9 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
   }
 
   // --- WIDGET TAMPILAN HASIL AKHIR ---
-  Widget _buildResultScreen(int totalQuestions) {
+  Widget _buildResultScreen(int totalQuestions, String lang) {
     // Hitung Skor (Skala 0 - 100)
-    double score = (_correctAnswers / totalQuestions) * 100;
+    double score = totalQuestions > 0 ? (_correctAnswers / totalQuestions) * 100 : 0;
 
     return Container(
       width: double.infinity,
@@ -172,9 +215,9 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
-            "Hasil Kuis",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
+          Text(
+            AppStrings.get('quiz_result', lang),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
           ),
           const SizedBox(height: 20),
           Container(
@@ -195,7 +238,7 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
                     color: score >= 70 ? Colors.green : Colors.orange,
                   ),
                 ),
-                const Text("Skor Akhir", style: TextStyle(color: Colors.grey)),
+                Text(AppStrings.get('final_score', lang), style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
@@ -204,8 +247,8 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatCard("Benar", _correctAnswers, Colors.green),
-              _buildStatCard("Salah", _wrongAnswers, Colors.red),
+              _buildStatCard(AppStrings.get('correct_label', lang), _correctAnswers, Colors.green),
+              _buildStatCard(AppStrings.get('wrong_label', lang), _wrongAnswers, Colors.red),
             ],
           ),
           const SizedBox(height: 40),
@@ -220,7 +263,7 @@ class _QuizFirestoreScreenState extends State<QuizFirestoreScreen> {
               onPressed: () {
                 Navigator.pop(context); // Kembali ke menu sebelumnya
               },
-              child: const Text("Selesai & Kembali", style: TextStyle(fontSize: 16, color: Colors.white)),
+              child: Text(AppStrings.get('finish_and_back', lang), style: const TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ),
         ],

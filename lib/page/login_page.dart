@@ -33,6 +33,9 @@ class _LoginPageState extends State<LoginPage> {
           // 3. Simpan Token
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('access_token', response['access_token']);
+          await prefs.setString('user_name', googleUser.displayName ?? 'Pelajar');
+          await prefs.setString('user_email', googleUser.email);
+          await prefs.setString('user_photo', googleUser.photoUrl ?? '');
 
           // 4. Masuk ke Home
           if (mounted) {

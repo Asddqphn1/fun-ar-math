@@ -120,7 +120,7 @@ class _AdaptiveExamScreenState extends State<AdaptiveExamScreen> {
       answersToSend.add({
         "exam_question_id": qId,
         "answer_label": label,
-        "thinking_time": thinkingTimePerQuestion[qId] ?? 0,
+        "time_seconds": thinkingTimePerQuestion[qId] ?? 0,
       });
     });
 
@@ -128,6 +128,8 @@ class _AdaptiveExamScreenState extends State<AdaptiveExamScreen> {
       final result = await ApiService.submitBatch(sessionId!, answersToSend);
 
       // Update Statistik dari Response
+      double avgTime = (result['avg_time_seconds'] as num?)?.toDouble() ?? 0;
+      double timeBonus = (result['time_bonus'] as num?)?.toDouble() ?? 0;
       setState(() {
         totalFinalScore = (result['total_score'] as num).toDouble();
         totalCorrect += (result['correct_count'] as int);
@@ -158,11 +160,16 @@ class _AdaptiveExamScreenState extends State<AdaptiveExamScreen> {
         _startTimer();
 
         // Tampilkan Info progress
+        String bonusInfo = timeBonus > 0
+            ? ' | Bonus Waktu: +${timeBonus.toStringAsFixed(0)}'
+            : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("$message. Lanjut ke Batch $currentBatchIndex"),
+            content: Text(
+              "$message. Rata-rata: ${avgTime.toStringAsFixed(1)}s$bonusInfo. Lanjut ke Batch $currentBatchIndex",
+            ),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 3),
           ),
         );
       } else {

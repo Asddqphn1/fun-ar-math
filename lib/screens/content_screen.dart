@@ -3,7 +3,7 @@ import 'package:model_viewer_plus/model_viewer_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:quickalert/quickalert.dart';
-
+import '../widgets/translated_text.dart';
 
 enum ContentMode { model, quizLocal, rumus }
 
@@ -91,7 +91,17 @@ class _ContentScreenState extends State<ContentScreen> {
     switch (widget.mode) {
       case ContentMode.model:
         return Column(children: [
-          Padding(padding: const EdgeInsets.all(16), child: Text("Ciri-ciri: ${(widget.data!['keterangan'] as List).join('\n')}")),
+          Padding(
+            padding: const EdgeInsets.all(16), 
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const TranslatedText("Ciri-ciri:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                ...((widget.data!['keterangan'] as List).map((e) => TranslatedText("- $e"))),
+              ],
+            )
+          ),
           Expanded(child: ModelViewer(src: widget.data!['model'], alt: "AR Model", ar: true, autoRotate: true, cameraControls: true))
         ]);
       case ContentMode.rumus:

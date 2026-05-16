@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quickalert/quickalert.dart';
+import '../widgets/translated_text.dart';
 
 class QuizStaticScreen extends StatefulWidget {
   final List<Map<String, dynamic>> quizList;
@@ -68,7 +69,7 @@ class _QuizStaticScreenState extends State<QuizStaticScreen> {
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
           ),
           const SizedBox(height: 10),
-          Text("Soal ${_currentIndex + 1} / ${widget.quizList.length}", textAlign: TextAlign.center),
+          TranslatedText("Soal ${_currentIndex + 1} / ${widget.quizList.length}", textAlign: TextAlign.center),
           const SizedBox(height: 20),
 
           // Container Soal
@@ -80,7 +81,7 @@ class _QuizStaticScreenState extends State<QuizStaticScreen> {
               border: Border.all(color: Colors.blue.shade100),
               boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 5)],
             ),
-            child: Text(
+            child: TranslatedText(
               questionText,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
@@ -105,7 +106,7 @@ class _QuizStaticScreenState extends State<QuizStaticScreen> {
                   children: [
                     Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked, color: Colors.blue),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(options[index])),
+                    Expanded(child: TranslatedText(options[index])),
                   ],
                 ),
               ),
@@ -166,7 +167,7 @@ class _QuizStaticScreenState extends State<QuizStaticScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
+          const TranslatedText(
             "Hasil Kuis",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
           ),
@@ -189,7 +190,7 @@ class _QuizStaticScreenState extends State<QuizStaticScreen> {
                     color: score >= 70 ? Colors.green : Colors.orange,
                   ),
                 ),
-                const Text("Skor Akhir", style: TextStyle(color: Colors.grey)),
+                const TranslatedText("Skor Akhir", style: TextStyle(color: Colors.grey)),
               ],
             ),
           ),
@@ -198,47 +199,34 @@ class _QuizStaticScreenState extends State<QuizStaticScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatCard("Benar", _correctAnswers, Colors.green),
-              _buildStatCard("Salah", _wrongAnswers, Colors.red),
+              _buildStatItem("Benar", _correctAnswers, Colors.green),
+              _buildStatItem("Salah", _wrongAnswers, Colors.red),
             ],
           ),
           const SizedBox(height: 40),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade800,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () {
-                Navigator.pop(context); // Kembali ke menu sebelumnya
-              },
-              child: const Text("Selesai & Kembali", style: TextStyle(fontSize: 16, color: Colors.white)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
             ),
-          ),
+            onPressed: () => Navigator.pop(context),
+            child: const TranslatedText("Kembali ke Menu", style: TextStyle(color: Colors.white)),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, int count, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            count.toString(),
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color),
-          ),
-          Text(label, style: TextStyle(color: color)),
-        ],
-      ),
+  Widget _buildStatItem(String label, int value, Color color) {
+    return Column(
+      children: [
+        TranslatedText(label, style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+        const SizedBox(height: 5),
+        Text(
+          value.toString(),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
     );
   }
 }

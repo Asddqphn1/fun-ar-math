@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geoarappv1/screens/quiz_screen.dart';
 import 'package:quickalert/quickalert.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/menu_card.dart';
 import '../widgets/info_button.dart';
+import '../widgets/translated_text.dart';
+import '../core/language_provider.dart';
 import 'sub_menu_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,17 +36,48 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              TranslatedText("Halo, Pelajar!", style: TextStyle(fontSize: 18, color: Colors.white70)),
+                              SizedBox(height: 4),
+                              TranslatedText("Fun AR Matematika", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        // Action Buttons
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text("Halo, Pelajar!", style: TextStyle(fontSize: 18, color: Colors.white70)),
-                            SizedBox(height: 4),
-                            Text("Fun AR Matematika", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                            TextButton(
+                              onPressed: () {
+                                context.read<LanguageProvider>().toggleLanguage();
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(40, 40),
+                              ),
+                              child: Text(
+                                context.watch<LanguageProvider>().languageCode == 'id' ? '🇮🇩' : '🇬🇧',
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.person, color: Colors.white, size: 28),
+                              tooltip: "Profil",
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                );
+                              },
+                            ),
+                            const InfoButton(),
                           ],
                         ),
-                        // TOMBOL INFO
-                        const InfoButton(),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -94,6 +130,7 @@ class HomeScreen extends StatelessWidget {
                       _buildMenuItem(context, "Materi\nB. Ruang", Icons.menu_book, Colors.green, 'materi_ruang', isComingSoon: true),
                       _buildMenuItem(context, "Materi\nB. Datar", Icons.auto_stories, Colors.purple, 'materi_datar'),
                       _buildMenuItem(context, "Soal\nB. Ruang", Icons.quiz, Colors.red, 'soal_ruang'),
+                      _buildMenuItem(context, "Soal\nB. Datar", Icons.quiz, Colors.deepPurple, 'soal_datar'),
                       _buildMenuItem(context, "Soal\nUjian", Icons.assignment, Colors.teal, 'soal_ujian'),
                     ],
                   ),
@@ -145,7 +182,7 @@ class HomeScreen extends StatelessWidget {
               child: Icon(icon, size: 32, color: iconColor),
             ),
             const SizedBox(height: 12),
-            Text(
+            TranslatedText(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -157,7 +194,7 @@ class HomeScreen extends StatelessWidget {
             if (isComingSoon)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
+                child: TranslatedText(
                   'Segera Hadir!',
                   style: TextStyle(
                     fontSize: 10,

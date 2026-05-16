@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:geoarappv1/page/login_page.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import ini
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/language_provider.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,19 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final String? token = prefs.getString('access_token');
 
-  runApp(MyApp(initialRoute: token != null ? '/home' : '/login'));
+  // [TAMBAHAN 2]: Inisialisasi LanguageProvider dan load preferensi bahasa
+  final languageProvider = LanguageProvider();
+  await languageProvider.loadLanguage();
+
+  // [TAMBAHAN 3]: Bungkus MyApp dengan MultiProvider
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: languageProvider),
+      ],
+      child: MyApp(initialRoute: token != null ? '/home' : '/login'),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

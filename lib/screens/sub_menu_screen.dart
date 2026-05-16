@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import '../core/language_provider.dart';
+import '../widgets/translated_text.dart';
 import '../data/static_data.dart';
 import 'content_screen.dart';       // Untuk Materi & Model
 import 'quiz_static_screen.dart';   // Untuk Soal Static (Offline)
@@ -20,9 +23,19 @@ class SubMenuScreen extends StatelessWidget {
     if (menuType == 'soal_ujian') {
       title = "Pilih Topik Ujian";
       items = [
-        {'name': 'Ujian Segitiga', 'ref': 'Segitiga', 'icon': Icons.crop_square, 'type': 'exam'},
-        {'name': 'Ujian Trapesium', 'ref': 'Trapesium', 'icon': Icons.rectangle_outlined, 'type': 'exam'},
-        {'name': 'Ujian Persegi', 'ref': 'Persegi', 'icon': Icons.circle, 'type': 'exam'},
+        // Bangun Datar
+        {'name': 'Ujian Segitiga', 'ref': 'Segitiga', 'icon': Icons.change_history, 'type': 'exam'},
+        {'name': 'Ujian Trapesium', 'ref': 'Trapesium', 'icon': Icons.terrain, 'type': 'exam'},
+        {'name': 'Ujian Persegi', 'ref': 'Persegi', 'icon': Icons.crop_square, 'type': 'exam'},
+        
+        // Bangun Ruang
+        {'name': 'Ujian Kubus', 'ref': 'Kubus', 'icon': Icons.crop_square, 'type': 'exam'},
+        {'name': 'Ujian Balok', 'ref': 'Balok', 'icon': Icons.rectangle_outlined, 'type': 'exam'},
+        {'name': 'Ujian Tabung', 'ref': 'Tabung', 'icon': Icons.circle, 'type': 'exam'},
+        {'name': 'Ujian Kerucut', 'ref': 'Kerucut', 'icon': Icons.change_history, 'type': 'exam'},
+        {'name': 'Ujian Bola', 'ref': 'Bola', 'icon': Icons.sports_soccer, 'type': 'exam'},
+        {'name': 'Ujian Limas', 'ref': 'Limas', 'icon': Icons.details, 'type': 'exam'},
+        {'name': 'Ujian Prisma', 'ref': 'Prisma', 'icon': Icons.view_in_ar, 'type': 'exam'},
       ];
     }
     // --- 2. MENU BANGUN RUANG (MODEL & SOAL FIREBASE) ---
@@ -95,53 +108,70 @@ class SubMenuScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(color: Colors.white)),
+        title: TranslatedText(title, style: const TextStyle(color: Colors.white)),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)]),
+            gradient: LinearGradient(
+              colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          TextButton(
+            onPressed: () {
+              context.read<LanguageProvider>().toggleLanguage();
+            },
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(40, 40),
+            ),
+            child: Text(
+              context.watch<LanguageProvider>().languageCode == 'id' ? '🇮🇩' : '🇬🇧',
+              style: const TextStyle(fontSize: 24),
+            ),
+          ),
+        ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          // Cek tipe untuk memberi warna berbeda jika perlu
-          bool isExam = item['type'] == 'exam';
-          bool isFirebase = item['type'] == 'firebase';
+      body: Container(
+        color: Colors.grey[50], // Background yang lembut
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Container(
-              decoration: (isExam || isFirebase) ? BoxDecoration(
-                  border: Border.all(color: isExam ? Colors.orange.shade300 : Colors.green.shade300),
-                  borderRadius: BorderRadius.circular(12)
-              ) : null,
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 6, offset: const Offset(0, 3)),
+                ],
+              ),
               child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 leading: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    // Warna icon beda: Orange (Ujian), Hijau (Firebase), Biru (Default)
-                      color: isExam ? Colors.orange.shade50 : (isFirebase ? Colors.green.shade50 : Colors.blue.shade50),
-                      borderRadius: BorderRadius.circular(8)
+                    color: Colors.blue.shade50,
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                      item['icon'] ?? Icons.category,
-                      color: isExam ? Colors.orange : (isFirebase ? Colors.green : Colors.blue)
-                  ),
+                  child: Icon(item['icon'], color: Colors.blue.shade700, size: 24),
                 ),
-                title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: isExam ? const Text("Adaptif AI (Server)", style: TextStyle(fontSize: 10, color: Colors.grey)) : null,
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                title: TranslatedText(
+                  item['name'],
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
                 onTap: () => _handleNavigation(context, item),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -162,7 +192,7 @@ class SubMenuScreen extends StatelessWidget {
       Navigator.push(context, MaterialPageRoute(
         builder: (context) => QuizFirestoreScreen(
           collectionId: item['id'], // ID dokumen di Firestore
-          categoryDoc: 'bangun_datar', // Default parent collection (sesuaikan jika ada bangun_ruang)
+          categoryDoc: menuType == 'soal_ruang' ? 'bangun_ruang' : 'bangun_datar', // Sesuaikan dengan bangun_ruang atau bangun_datar
           title: item['name'],
         ),
       ));
